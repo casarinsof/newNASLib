@@ -1,0 +1,12 @@
+batch_size: 4
+config_type: ablation_b4
+cutout: false
+cutout_length: 16
+cutout_prob: 1.0
+dataset: cifar10
+out_dir: nb101_0
+predictor: flops
+search_space: nasbench101
+seed: 0
+test_size: 1000
+train_portion: 0.7

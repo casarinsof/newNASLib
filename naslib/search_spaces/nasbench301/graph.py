@@ -59,7 +59,7 @@ class NasBench301SearchSpace(Graph):
 
     QUERYABLE = True
 
-    def __init__(self, n_classes=10):
+    def __init__(self, n_classes=10, in_channels=3, auxiliary=True):
         """
         Initialize a new instance of the DARTS search space.
         Note:
@@ -74,8 +74,12 @@ class NasBench301SearchSpace(Graph):
         self.load_labeled = None
         self.num_classes = n_classes
         self.max_epoch = 100
+        self.in_channels = in_channels
         self.space_name = "nasbench301"
-        self.auxiliary_output = True
+        self.auxiliary_output = auxiliary
+        self.labeled_archs = None
+        self.instantiate_model = True
+        self.sample_without_replacement = False
 
         """
         Build the search space with the parameters specified in __init__.
@@ -161,11 +165,8 @@ class NasBench301SearchSpace(Graph):
             11, subgraph=normal_cell.copy().set_scope("n_stage_3").set_input([9, 10])
         )
 
-        # auxiliary
-        self.add_node(12)
-
         # output
-        self.add_node(13)
+        self.add_node(12)
 
         # chain connections
         self.add_edges_from([(i, i + 1) for i in range(1, 11)])
@@ -176,6 +177,9 @@ class NasBench301SearchSpace(Graph):
         self.add_edge(2, 5)
 
         if self.auxiliary_output:
+            # node 12 becomes aux head
+            self.add_node(13)
+
             # auxiliary
             self.add_edge(11, 12)
 
@@ -216,7 +220,8 @@ class NasBench301SearchSpace(Graph):
         # pre-processing
         # In darts there is a hardcoded multiplier of 3 for the output of the stem
         stem_multiplier = 3
-        self.edges[1, 2].set("op", ops.Stem(C_out=self.channels[0] * stem_multiplier))
+        self.edges[1, 2].set("op", ops.Stem(C_in=self.in_channels,
+                                            C_out=self.channels[0] * stem_multiplier))
 
         # edges connecting cells
         for u, v, data in sorted(self.edges(data=True)):
@@ -339,16 +344,16 @@ class NasBench301SearchSpace(Graph):
             self.edges[11, 12].set(
                 "op",
                 ops.Sequential(
-                    nn.ReLU(inplace=True),
+                    nn.ReLU(inplace=False),
                     nn.AvgPool2d(
                         5, stride=3, padding=0, count_include_pad=False
                     ),  # image size = 2 x 2
                     nn.Conv2d(self.channels[-1] * self.num_in_edges, 128, 1, bias=False),
                     nn.BatchNorm2d(128),
-                    nn.ReLU(inplace=True),
+                    nn.ReLU(inplace=False),
                     nn.Conv2d(128, 768, 2, bias=False),
                     nn.BatchNorm2d(768),
-                    nn.ReLU(inplace=True),
+                    nn.ReLU(inplace=False),
                     nn.Flatten(),
                     nn.Linear(768, self.num_classes),
                 ),
@@ -448,16 +453,32 @@ class NasBench301SearchSpace(Graph):
     def set_compact(self, compact):
         # This will update the edges in the naslib object to match compact
         self.compact = compact
-        convert_compact_to_naslib(compact, self)
+
+        if self.instantiate_model == True:
+            convert_compact_to_naslib(compact, self)
 
     def set_spec(self, compact, dataset_api=None):
         self.set_compact(make_compact_immutable(compact))
 
-    def sample_random_architecture(self, dataset_api=None):
+    def sample_random_labeled_architecture(self):
+        assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
+
+        op_indices = random.choice(self.labeled_archs)
+
+        if self.sample_without_replacement == True:
+            self.labeled_archs.pop(self.labeled_archs.index(op_indices))
+
+        self.set_spec(op_indices)
+
+    def sample_random_architecture(self, dataset_api=None, load_labeled=False):
         """
         This will sample a random architecture and update the edges in the
         naslib object accordingly.
         """
+
+        if load_labeled == True:
+            return self.sample_random_labeled_architecture()
+
         compact = [[], []]
         for i in range(NUM_VERTICES):
             ops = np.random.choice(range(NUM_OPS), NUM_VERTICES)
@@ -499,6 +520,22 @@ class NasBench301SearchSpace(Graph):
 
     def get_loss_fn(self):
         return F.cross_entropy
+
+    def forward_before_global_avg_pool(self, x):
+        outputs = []
+        def hook_fn(module, inputs, output_t):
+            # print(f'Input tensor shape: {inputs[0].shape}')
+            # print(f'Output tensor shape: {output_t.shape}')
+            outputs.append(inputs[0])
+
+        for m in self.modules():
+            if isinstance(m, torch.nn.AdaptiveAvgPool2d):
+                m.register_forward_hook(hook_fn)
+
+        self.forward(x, None)
+
+        assert len(outputs) == 1
+        return outputs[0]
 
 
 def channel_concat(tensors):

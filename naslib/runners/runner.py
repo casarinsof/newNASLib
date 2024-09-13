@@ -1,11 +1,12 @@
 """ Evaluates a ZeroCost predictor for a search space and dataset/task"""
 import logging
-
+import os, sys
+# Add the project_root directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 from naslib.evaluators.zc_evaluator import ZeroCostPredictorEvaluator
 from naslib.predictors import ZeroCost
 from naslib.search_spaces import get_search_space
 from naslib.utils import utils, setup_logger, get_dataset_api
-
 # Get the configs from naslib/configs/predictor_config.yaml and the command line arguments
 # The configs include the zero-cost method to use, the search space and dataset/task to use,
 # amongst others.

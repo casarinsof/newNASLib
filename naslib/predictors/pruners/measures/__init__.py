@@ -58,6 +58,18 @@ def load_all():
     from . import jacov
     from . import plain
     from . import synflow
+    from . import swap
+    from . import epe_nas
+    from . import zen
+    from . import l2_norm
+    from . import nwot
+    from . import model_stats
+    from . import zico
+    from . import my_zico
+    from . import zico_nolog
+    from . import zico_nomu
+    from . import lga
+    from . import zico_lga
 
 # TODO: should we do that by default?
 load_all()

@@ -1,0 +1,12 @@
+batch_size: 64
+config_type: all
+cutout: false
+cutout_length: 16
+cutout_prob: 1.0
+dataset: cifar100
+out_dir: nb201_0
+predictor: swap
+search_space: nasbench201
+seed: 0
+test_size: 15625
+train_portion: 0.7

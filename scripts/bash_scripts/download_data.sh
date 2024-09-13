@@ -6,79 +6,139 @@ echo search_space = $search_space
 tnb_datasets=(benevolence forkland merom)
 if [ "$search_space" = "tnb101" ] || [ "$search_space" = "all" ]
 then
-   cd taskonomydata_mini	
-   if [ "$dataset" = "jigsaw" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
-   then
-      for dataset_base in ${tnb_datasets[@]}
+  cd taskonomydata_mini
+  if [ "$dataset" = "jigsaw" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_rgb.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/rgb/$file
+      echo $filepath
+	    cd $dataset_base
+      if [ -d "rgb" ]
+      then
+        echo rgb exists
+      else
+        echo rgb does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+  fi
+  if [ "$dataset" = "class_scene" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_class_scene.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/class_scene/$file
+      echo $filepath
+      cd $dataset_base
+      if [ -d "class_scene" ]
+      then
+        echo class_scene exists
+      else
+        echo class_scene does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      echo starting $dataset_base
+      for j in $dataset_base/class_scene/*class_places.npy
       do
-        file=$dataset_base\_rgb.tar
-        filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/rgb/$file
-        echo $filepath
-	cd $dataset_base
-        if [ -d "rgb" ]
-        then
-           echo rgb exists
-        else
-           echo rgb does not exist
-           wget $filepath
-           tar -xvf $file
-           rm $file
-        fi
-        cd ..
-      done
-   fi
-   if [ "$dataset" = "class_scene" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
-   then 
-      for dataset_base in ${tnb_datasets[@]}
-      do
-       file=$dataset_base\_class_scene.tar
-       filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/class_scene/$file
-       echo $filepath
-       cd $dataset_base
-       if [ -d "class_scene" ]
-       then
-          echo class_scene exists
-       else
-          echo class_scene does not exist
-          wget $filepath
-          tar -xvf $file
-          rm $file
-       fi
-       cd ..
-      done
-      for dataset_base in ${tnb_datasets[@]}
-      do
-       echo starting $dataset_base
-       for j in $dataset_base/class_scene/*class_places.npy
-       do
         #echo "$j"
         #echo "${j%class_places.npy}class_scene.npy"
         mv -- "$j" "${j%class_places.npy}class_scene.npy"
-       done
-       done
-   fi
-   if [ "$dataset" = "class_object" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
-   then
-      for dataset_base in ${tnb_datasets[@]}
-      do
-       file=$dataset_base\_class_object.tar
-       filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/class_object/$file
-       echo $filepath
-       cd $dataset_base
-       if [ -d "class_object" ]
-       then
-          echo class_object exists
-       else
-          echo class_object does not exist
-          wget $filepath
-          tar -xvf $file
-          rm $file
-       fi
-       cd ..
       done
-   fi
-   cd ..
+    done
+  fi
+  if [ "$dataset" = "class_object" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_class_object.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/class_object/$file
+      echo $filepath
+      cd $dataset_base
+      if [ -d "class_object" ]
+      then
+        echo class_object exists
+      else
+        echo class_object does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+  fi
+  if [ "$dataset" = "normal" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_normal.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/normal/$file
+      echo $filepath
+      cd $dataset_base
+      if [ -d "normal" ]
+      then
+        echo normal exists
+      else
+        echo normal does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+  fi
+  if [ "$dataset" = "segment_semantic" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_segmentsemantic.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/segment_semantic/$file
+      echo $filepath
+      cd $dataset_base
+      if [ -d "segment_semantic" ]
+      then
+        echo segmentsemantic exists
+      else
+        echo segmentsemantic does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+  fi
+  if [ "$dataset" = "room_layout" ] || [ "$search_space" = "all" ] || [ "$dataset" = "all" ]
+  then
+    for dataset_base in ${tnb_datasets[@]}
+    do
+      file=$dataset_base\_point_info.tar
+      filepath=http://downloads.cs.stanford.edu/downloads/taskonomy_data/point_info/$file
+      echo $filepath
+      cd $dataset_base
+      if [ -d "point_info" ]
+      then
+        echo point_info exists
+      else
+        echo point_info does not exist
+        wget $filepath
+        tar -xvf $file
+        rm $file
+      fi
+      cd ..
+    done
+  fi
 fi
+cd ..
 if [ "$search_space" = "nb301" ] || [ "$search_space" = "all" ]
 then
   if [ -e nb_models ]

@@ -22,6 +22,10 @@ class ZeroCost(Predictor):
         self.method_type = method_type
         self.dataload = "random"
         self.num_imgs_or_batches = 1
+        if (self.method_type == "zico" or self.method_type == "my_zico" or self.method_type == "zico_nolog"
+                or self.method_type == "zico_nomu" or self.method_type == 'zicoLGA'):
+            self.num_imgs_or_batches = 2
+            self.dataload = "zico"
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def query(self, graph, dataloader=None, info=None):

@@ -1,5 +1,5 @@
 seed: 12
-out_dir: "tmp/test/hallo"
+out_dir: "tmp_all/test/hallo"
 search_space: darts
 optimizer: darts
 dataset: cifar10

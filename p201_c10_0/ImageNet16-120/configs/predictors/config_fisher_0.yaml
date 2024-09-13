@@ -1,0 +1,12 @@
+batch_size: 64
+cutout: false
+cutout_length: 16
+cutout_prob: 1.0
+dataset: ImageNet16-120
+out_dir: p201_c10_0
+predictor: fisher
+search_space: nasbench201
+seed: 0
+test_size: 15625
+train_portion: 0.7
+train_size: 10

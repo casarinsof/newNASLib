@@ -70,6 +70,8 @@ def find_measures_arrays(
             samples_per_class=num_imgs_or_batches,
             device=device,
         )
+    elif dataload == "zico":
+        inputs, targets = get_some_data_zico(trainloader, num_imgs_or_batches, device=device)
     else:
         raise NotImplementedError(f"dataload {dataload} is not supported")
 
@@ -87,7 +89,7 @@ def find_measures_arrays(
                         inputs,
                         targets,
                         loss_fn=loss_fn,
-                        split_data=ds,
+                        split_data=ds, #todo -------------- aggiungere altri parametri richiesti da swap??????regular=False, mu=None, sigma=None,
                     )
                     measure_values[measure_name] = val
 
@@ -161,7 +163,8 @@ def find_measures(
         )
 
     for k, v in measures_arr.items():
-        if k == "jacov":
+        if (k == "jacov" or k == 'swap' or k == 'zico' or k == 'zen' or k == 'epe_nas' or k == 'nwot' or k == 'my_zico'
+                or k == 'zico_nolog' or k == 'zico_nomu' or k == 'lga' or k == 'zicoLGA'):
             measure_score = v
         else:
             measure_score = sum_arr(v)

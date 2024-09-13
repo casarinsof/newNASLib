@@ -27,6 +27,22 @@ The challenge is as follows: Given N models from a search space, such as [NASBen
 
 # Setup
 
+On CINECA:
+```bash
+# create the conda env loading cineca-ai module
+module load anaconda3/<version>
+module load profile/deeplrn
+module av cineca-ai
+module load cineca-ai/<version>
+conda create -p <path>/my_env -c conda-forge --override-channels   
+ 
+# activate the created conda env to access cineca packages and install your conda packages.
+conda activate <path>/my_env
+python -m pip list
+python -m pip install my_packages
+conda deactivate
+```
+
 While installing the repository, creating a new conda environment is recomended. [Install PyTorch GPU/CPU](https://pytorch.org/get-started/locally/) for your setup.
 
 ```bash
@@ -35,23 +51,39 @@ cd NASLib
 conda create -n automl-competition  python=3.9
 conda activate automl-competition
 ```
-
-Run setup.py file with the following command, which will install all the packages listed in [`requirements.txt`](requirements.txt).
+IF CONDA: Run setup.py file with the following command, which will install all the packages listed in [`requirements.txt`](requirements.txt).
 ```bash
 pip install --upgrade pip setuptools wheel
 pip install -e .
+pip install tornado 
+pip install archai
+pip install transforms3d
 ```
+N.B potrsti avere torch incompatible with cuda..
+
+Se non hai conda:
+
+```bash
+python3 -m venv .automl-competition
+source .automk-competition/bin/activate
+pip install -r myrequirements.txt
+```
+
 Download all the datasets and benchmarks ( for mac users, please make sure you have wget installed).
 ```bash
 source scripts/bash_scripts/download_data.sh all 
+Download nb101 from https://drive.google.com/drive/folders/1rwmkqyij3I24zn5GSO6fGv2mzdEfPIEa
 ```
 Alternatively, you can download the benchmark for a specific search space and dataset/task as follows:
 ```bash
 source scripts/bash_scripts/download_data.sh <search_space> <dataset> 
 source scripts/bash_scripts/download_data.sh nb201 cifar10
 source scripts/bash_scripts/download_data.sh nb201 all 
+Rinomina segment folder of taskonomy as segmentsemantic
 ```
-Download the TransNAS-Bench-101 benchmark from [here](https://www.noahlab.com.hk/opensource/vega/page/doc.html?path=datasets/transnasbench101) unzip the folder and place the benchmark `transnas-bench_v10141024.pth` from this folder in `NASLib/naslib/data/..`
+Download the TransNAS-Bench-101 benchmark from https://drive.google.com/drive/folders/1HlLr2ihZX_ZuV3lJX_4i7q4w-ZBdhJ6o. 
+Original link ([here](https://www.noahlab.com.hk/opensource/vega/page/doc.html?path=datasets/transnasbench101) ) does not work!
+[here](https://www.noahlab.com.hk/opensource/vega/page/doc.html?path=datasets/transnasbench101) unzip the folder and place the benchmark `transnas-bench_v10141024.pth` from this folder in `NASLib/naslib/data/..`
 
 If you face issues downloading the datasets please follow the steps [here](dataset_preparation/).
 

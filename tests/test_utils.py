@@ -14,11 +14,11 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(config.evaluation.batch_size, 200)
 
     def test_get_config_from_args__from_args(self):
-        args = utils.parse_args(args=['seed', '1', 'out_dir', 'tmp/util_test'])
+        args = utils.parse_args(args=['seed', '1', 'out_dir', 'tmp_all/util_test'])
         config = utils.get_config_from_args(args)
 
         self.assertEqual(config.seed, 1)
-        self.assertEqual(config.out_dir, 'tmp/util_test')
+        self.assertEqual(config.out_dir, 'tmp_all/util_test')
 
     def test_get_config_from_args__default(self):
         self._test_get_config_from_args_default(config_type="predictor")

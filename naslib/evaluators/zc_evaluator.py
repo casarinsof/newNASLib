@@ -119,8 +119,10 @@ class ZeroCostPredictorEvaluator(object):
 
         logger.info("Querying the predictor")
         query_time_start = time.time()
-
-        _, _, test_loader, _, _ = utils.get_train_val_loaders(self.config)
+        if 'zico' in self.config.predictor:
+            test_loader, _, _, _, _ = utils.get_train_val_loaders(self.config) # they compute con train data
+        else:
+            _, _, test_loader, _, _ = utils.get_train_val_loaders(self.config) # todo forse dovrebbe esser eval_loader xo per essere corretti
 
         # Iterate over the architectures, instantiate a graph with each architecture
         # and then query the predictor for the performance of that
@@ -133,9 +135,22 @@ class ZeroCostPredictorEvaluator(object):
             graph.parse()
 
             pred = self.predictor.query(graph, dataloader=test_loader)
+
             test_pred.append(pred)
 
         test_pred = np.array(test_pred)
+     #   import matplotlib.pyplot as plt
+        # Create a histogram
+     #   plt.hist(test_pred, bins=30, edgecolor='black')
+
+        # Add titles and labels
+    #    plt.title(f'{self.config.search_space}')
+    #    plt.xlabel('Model size (MB)')
+    #    plt.ylabel('Frequency')
+
+        # Show the plot
+    #    plt.savefig(f'/home/scasarin/NASLib/images/histogram_{self.config.search_space}.png', format='png', dpi=300)  # Higher DPI for better quality
+
         query_time_end = time.time()
 
         # If the predictor is an ensemble, take the mean
@@ -217,7 +232,7 @@ class ZeroCostPredictorEvaluator(object):
             metrics_dict["kt_1dec"] = stats.kendalltau(
                 ytest, np.round(test_pred, decimals=1)
             )[0]
-            for k in [10, 20]:
+            for k in [5, 25, 100]:
                 top_ytest = np.array(
                     [y > sorted(ytest)[max(-len(ytest), -k - 1)] for y in ytest]
                 )

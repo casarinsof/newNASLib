@@ -1,4 +1,4 @@
-predictors=(fisher grad_norm grasp jacov snip synflow params flops)
+predictors=(swap) # fisher grad_norm grasp jacov snip synflow params flops)
 
 start_seed=$1
 if [ -z "$start_seed" ]
@@ -8,8 +8,10 @@ fi
 
 # folders:
 base_file=scripts
-s3_folder=p201_c10
+s3_folder=nb201
 out_dir=$s3_folder\_$start_seed
+config_root=configs
+experiment=all
 
 # search space / datasets:
 search_space=nasbench201
@@ -18,16 +20,18 @@ datasets=(cifar10 cifar100 ImageNet16-120)
 # other variables:
 trials=1
 end_seed=$(($start_seed + $trials - 1))
-test_size=5
+test_size=15625
+batch_size=64
+
 
 # create config files
 for dataset in ${datasets[@]}
 do
  for predictor in ${predictors[@]}
  do
-    python $base_file/create_configs.py --predictor $predictor \
+    python3 $base_file/create_configs.py --predictor $predictor \
     --test_size $test_size --start_seed $start_seed --trials $trials --out_dir $out_dir \
-    --dataset=$dataset --search_space $search_space
+    --dataset=$dataset --search_space $search_space --batch_size $batch_size --experiment benchmarks --config_root=$config_root
  done  
 done
 
@@ -38,9 +42,10 @@ do
     do
        for predictor in ${predictors[@]}
        do
-        config_file=$out_dir/$dataset/configs/predictors/config\_$predictor\_$t.yaml
+          config_file=${config_root}/${experiment}/${predictor}/${search_space}-${start_seed}/${dataset}/config_${start_seed}.yaml
+          echo $config_file
         echo ================running $predictor trial: $t for $dataset =====================
-        python naslib/runners/runner.py --config-file $config_file
+        python3 naslib/runners/runner.py --config-file $config_file
        done
     done
 done

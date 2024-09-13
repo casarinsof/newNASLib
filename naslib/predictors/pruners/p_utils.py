@@ -30,6 +30,15 @@ def get_some_data(train_dataloader, num_batches, device):
     targets = targets.to(device)
     return inputs, targets
 
+def get_some_data_zico(train_dataloader, num_batches, device):
+    x_batches, y_batches = [], []
+    for batchid, batch in enumerate(train_dataloader):
+        if batchid == num_batches:
+            break
+        datax, datay = batch[0].to(device), batch[1].to(device)
+        x_batches.append(datax)
+        y_batches.append(datay)
+    return x_batches, y_batches
 
 def get_some_data_grasp(train_dataloader, num_classes, samples_per_class, device):
     datas = [[] for _ in range(num_classes)]
@@ -86,3 +95,55 @@ def reshape_elements(elements, shapes, device):
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+def gram_matrix(feat):
+    a, b, c, d = feat.size()
+
+    features = feat.view(a*b, c*d)
+    gram = torch.mm(features, features.t())
+
+    return gram.div(a*b*c*d)
+
+def label_sim_matrix(input, target):
+    sim_matrix = np.zeros((len(target), len(target)))
+
+    for i in range(len(target)):
+        for j in range(len(target)):
+            if target[i] == target[j]:
+                sim_matrix[i,j] = 1
+            else:
+                sim_matrix[i,j] = -1
+
+    return sim_matrix
+#
+# import matplotlib.pyplot as plt
+#
+# # Data
+# batch_sizes = [2, 4, 8, 16, 32, 64, 128]
+# cifar10 = [0.548, 0.669, 0.752, 0.755, 0.729, 0.735, 0.742]
+# cifar100 = [0.549, 0.690, 0.656, 0.713, 0.714, 0.716, 0.718]
+# imnet = [0.534, 0.598, 0.671, 0.7133, 0.703, 0.711, 0.724]
+#
+# # Plotting
+# plt.figure(figsize=(8, 6))
+# plt.plot(batch_sizes, cifar10, label="CIFAR-10", marker='o')
+# plt.plot(batch_sizes, cifar100, label="CIFAR-100", marker='s')
+# plt.plot(batch_sizes, imnet, label="ImNET", marker='^')
+#
+# # Add title and labels
+# plt.title('Jacov nb201')
+# plt.xlabel('Batch Size')
+# plt.ylabel('Measure Value')
+#
+# # Set y-axis limits from 0 to 1
+# plt.ylim(0, 1)
+#
+# # Show legend
+# plt.legend()
+#
+# # Show grid
+# plt.grid(True)
+#
+# # Show plot
+# plt.show()
+
