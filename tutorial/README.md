@@ -286,7 +286,7 @@ If you've already downloaded the data and tested the API, you can skip this step
 !cd .. && source scripts/bash_scripts/download_data.sh nb201 cifar10
 
 !echo Testing NASBench201 API
-!cd .. && python test_benchmark_apis.py --search_space nasbench201 --task cifar10 --show_error
+!cd .. && python scripts/test_benchmark_apis.py --search_space nasbench201 --task cifar10 --show_error
 ```
 
     Downloading data for NASBench201 API

@@ -1,97 +1,84 @@
+# Zero-Cost NAS Competition (AutoML-Conf 22) - NASLib fork
 
 <div align="center">
   <img src="images/zcp_competition.png" width="1000" height="200">
 </div>
-<div>
 
-</div>
+This repository is a working copy of [NASLib](https://github.com/automl/NASLib) (branch `automl-conf-competition`) adapted for the [Zero-Cost NAS Competition](https://sites.google.com/view/zero-cost-nas-competition/home) organized at [AutoML-Conf 22](https://automl.cc/). Participants implement zero-cost proxies on top of a lightweight version of NASLib and are scored on how well the proxy ranks architectures from tabular/surrogate NAS benchmarks.
 
-<div align=justify>
+The challenge: given N models from a search space (e.g. NASBench301), the proxy scores and ranks them for a given task (e.g. CIFAR10 classification). The metric is the Kendall-Tau rank correlation between predicted and true ranks, averaged across benchmarks (search space and dataset combinations). Scoring must use negligible compute (CPU only, hard runtime limit).
 
-This is the official github repo for the [Zero-Cost NAS Competition](https://sites.google.com/view/zero-cost-nas-competition/home) organized at the [AutoML-Conf 22](https://automl.cc/). This competition shall be hosted on CodaLab. Participants will be required to implement their zero-cost proxies using a lightweight version of [NASLib](https://github.com/automl/NASLib), a library for Neural Architecture Search. NASLib provides users with a range of tabular and surrogate benchmarks, making it easy to sample a random architecture from a supported search space, instantiate it as a PyTorch model, and query its final performance instantly. Once a zero-cost proxy has been implemented, the framework allows users to evaluate its performance across several search spaces and tasks in a matter of minutes.
+## What was added in this fork
 
-</div>
+Work by [casarinsof](https://github.com/casarinsof) on top of upstream NASLib (git history, commit `5d9eaf93`):
 
-<div align=justify>
+- **Zero-cost proxies** in `naslib/predictors/pruners/measures/`: `swap`, `zen`, `zico` (plus variants `my_zico`, `zico_lga`, `zico_nolog`, `zico_nomu`, `zico_nomunolog`), `nwot`, `lga`, `epe_nas`; modified `jacov` and `l2_norm`. Registered through `naslib/predictors/zerocost.py` and `naslib/predictors/pruners/`.
+- **NASBench101 search space** (`naslib/search_spaces/nasbench101/`) with API loader `naslib/utils/nb101_api.py`; extended **TransNAS-Bench-101** support (macro/micro models in `naslib/search_spaces/transbench101/`).
+- Updates to `naslib/runners/runner.py`, `naslib/evaluators/zc_evaluator.py`, `naslib/utils/` (dataset API, ops loading).
+- **Experiment configs** (`configs/`) and **launch scripts** (`scripts/`) for batch-size ablations (batch sizes 2 to 128), proxy comparisons and benchmark runs across NB101/NB201/NB301/TNB101 micro and macro.
 
-The challenge is as follows: Given N models from a search space, such as [NASBench301](https://arxiv.org/pdf/2008.09777.pdf), the participant's zero-cost proxy will be used to score and rank the models for a given task, such as classification on CIFAR10 dataset. The Kendall-Tau rank correlation between the predicted and actual ranks of the models is the metric of interest. The final score of a submission shall be the average rank correlation across a set of NAS benchmarks (combinations of search spaces and datasets). To keep the spirit of "zero-cost" proxies in the user submissions, it is required that the scoring of models consumes only negligible computational resources. This is enforced by running the computations on CPUs instead of GPUs and setting a hard limit for the runtime of the program.
+## Repository structure
 
-</div>
-
-
-
-[**Setup**](#setup)
-| [**Tutorial**](#tutorial)
-| [**Usage**](#usage)
-
-
-# Setup
-
-On CINECA:
-```bash
-# create the conda env loading cineca-ai module
-module load anaconda3/<version>
-module load profile/deeplrn
-module av cineca-ai
-module load cineca-ai/<version>
-conda create -p <path>/my_env -c conda-forge --override-channels   
- 
-# activate the created conda env to access cineca packages and install your conda packages.
-conda activate <path>/my_env
-python -m pip list
-python -m pip install my_packages
-conda deactivate
+```
+naslib/                  NASLib library (search spaces, predictors/zero-cost measures, runners, utils)
+configs/
+  ablation/ablation_b*/  generated configs per batch size (2..128): <predictor>/<search_space>-<seed>/<dataset>/config_<seed>.yaml
+  all/                   configs for the full runs (swap, zico, my_zico)
+  benchmarks/            configs for benchmark runs
+  legacy_runs/           older generated config sets (p201_c10_0, tnb101_macro_0)
+scripts/
+  create_configs.py      generates the YAML configs
+  test_benchmark_apis.py checks that benchmark APIs load
+  bash_scripts/          main run scripts (run_nb101/nb201/nb301/tnb101/tnb101_macro, download_data.sh)
+  experiments/           per-experiment run scripts (abl_batch*, all, my_zico, nolog, nomunolog)
+competition/             sample evaluation code and sample submission
+tutorial/                tutorial notebook and sample submission
+dataset_preparation/     manual dataset preparation instructions
+tests/                   unit tests
+images/                  figures
 ```
 
-While installing the repository, creating a new conda environment is recomended. [Install PyTorch GPU/CPU](https://pytorch.org/get-started/locally/) for your setup.
+## Installation
+
+Python 3.7-3.9 is required (see `setup.py`). Install PyTorch for your platform first, then:
 
 ```bash
 git clone -b automl-conf-competition https://github.com/automl/NASLib/
 cd NASLib
-conda create -n automl-competition  python=3.9
+conda create -n automl-competition python=3.9
 conda activate automl-competition
-```
-IF CONDA: Run setup.py file with the following command, which will install all the packages listed in [`requirements.txt`](requirements.txt).
-```bash
 pip install --upgrade pip setuptools wheel
 pip install -e .
-pip install tornado 
-pip install archai
-pip install transforms3d
-```
-N.B potrsti avere torch incompatible with cuda..
-
-Se non hai conda:
-
-```bash
-python3 -m venv .automl-competition
-source .automk-competition/bin/activate
-pip install -r myrequirements.txt
+pip install tornado archai transforms3d
 ```
 
-Download all the datasets and benchmarks ( for mac users, please make sure you have wget installed).
+Without conda: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
+Note: the pinned `torch` version may not match your CUDA version.
+
+## Data
+
+Download all benchmarks (on macOS make sure `wget` is installed):
+
 ```bash
-source scripts/bash_scripts/download_data.sh all 
-Download nb101 from https://drive.google.com/drive/folders/1rwmkqyij3I24zn5GSO6fGv2mzdEfPIEa
+source scripts/bash_scripts/download_data.sh all
 ```
-Alternatively, you can download the benchmark for a specific search space and dataset/task as follows:
+
+or a single search space/dataset:
+
 ```bash
-source scripts/bash_scripts/download_data.sh <search_space> <dataset> 
+source scripts/bash_scripts/download_data.sh <search_space> <dataset>
 source scripts/bash_scripts/download_data.sh nb201 cifar10
-source scripts/bash_scripts/download_data.sh nb201 all 
-Rinomina segment folder of taskonomy as segmentsemantic
+source scripts/bash_scripts/download_data.sh nb201 all
 ```
-Download the TransNAS-Bench-101 benchmark from https://drive.google.com/drive/folders/1HlLr2ihZX_ZuV3lJX_4i7q4w-ZBdhJ6o. 
-Original link ([here](https://www.noahlab.com.hk/opensource/vega/page/doc.html?path=datasets/transnasbench101) ) does not work!
-[here](https://www.noahlab.com.hk/opensource/vega/page/doc.html?path=datasets/transnasbench101) unzip the folder and place the benchmark `transnas-bench_v10141024.pth` from this folder in `NASLib/naslib/data/..`
 
-If you face issues downloading the datasets please follow the steps [here](dataset_preparation/).
+- NASBench101: download from https://drive.google.com/drive/folders/1rwmkqyij3I24zn5GSO6fGv2mzdEfPIEa
+- TransNAS-Bench-101: download from https://drive.google.com/drive/folders/1HlLr2ihZX_ZuV3lJX_4i7q4w-ZBdhJ6o (the original link is no longer working), and place `transnas-bench_v10141024.pth` in `naslib/data/`. The `segment` folder of Taskonomy must be renamed `segmentsemantic`.
 
-# Tutorial
-This [tutorial](tutorial/) will help participants get acquainted with NASLib and a sample submission.
+If downloads fail, follow [dataset_preparation/](dataset_preparation/). Data is not tracked in git.
 
-# Usage
-To test the setup on different benchmarks you can run
+## Usage
+
+Run from the repository root.
 
 ```bash
 bash scripts/bash_scripts/run_nb201.sh
@@ -99,3 +86,20 @@ bash scripts/bash_scripts/run_nb301.sh
 bash scripts/bash_scripts/run_tnb101.sh
 ```
 
+These scripts generate configs with `scripts/create_configs.py` and run `naslib/runners/runner.py --config-file <config>`. A single run:
+
+```bash
+python naslib/runners/runner.py --config-file configs/ablation/ablation_b2/swap/nasbench201-0/cifar10/config_0.yaml
+```
+
+Batch-size ablations and variant experiments live in `scripts/experiments/`, for example `bash scripts/experiments/abl_batch2/run_nb201.sh`.
+
+For the competition submission format and a local evaluation example see [competition/](competition/) and the [tutorial](tutorial/).
+
+## Credits
+
+NASLib is developed by the AutoML groups at Freiburg/Tubingen (original authors include Colin White, Arber Zela, Robin Ru, Yang Liu, Julien Siems, Yash Mehta, Rhea Sukthanker and others; see the git history and the [upstream repository](https://github.com/automl/NASLib)). The zero-cost proxies are re-implementations/adaptations of published methods; see the module files for details.
+
+## License
+
+Apache License 2.0, inherited from NASLib. See [LICENSE](LICENSE).
